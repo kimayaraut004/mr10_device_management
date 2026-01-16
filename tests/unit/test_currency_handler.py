@@ -101,6 +101,26 @@ class TestCurrencyHandler:
             mock_doc1.payload.assert_called_once()
             mock_doc2.payload.assert_called_once()
 
+    def test_fetch_currencies_database_exception(self, currency_handler):
+        # ARRANGE: Mock MongoEngine query to raise an exception
+        with patch("core.currency_handler.CurrencySetting.objects") as mock_objects:
+            # Make the chain fail at order_by (simulates DB connection failure)
+            mock_objects.return_value.order_by.side_effect = Exception(
+                "Database timeout"
+            )
+
+            # ACT & ASSERT: Verify function raises correct HTTPException
+            with pytest.raises(HTTPException) as exc_info:
+                currency_handler.fetch_currencies(limit=10, skip=0)
+
+            # ASSERT: Correct status code and error message
+            exception = exc_info.value
+            assert exception.status_code == 500
+            assert exception.detail == "Unable to fetch currencies"
+
+            # VERIFY: Mock was called with correct chain
+            mock_objects.return_value.order_by.assert_called_once_with("code")
+
     def test_update_currency_success(self, currency_handler, valid_update_payload):
         test_id = "507f1f77bcf86cd799439011"
 
@@ -153,3 +173,7 @@ class TestCurrencyHandler:
             with pytest.raises(HTTPException) as exc_info:
                 currency_handler.delete_server_license_plan(test_id)
             assert exc_info.value.status_code == 404
+
+    def test_fetch_currencies_external_error(self, currency_handler):
+        mock_doc1 = MagicMock()
+        mock_doc1.payload.return_value = {"id": "1234", "name": "newname", "code": "EU"}
