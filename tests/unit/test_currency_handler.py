@@ -173,7 +173,3 @@ class TestCurrencyHandler:
             with pytest.raises(HTTPException) as exc_info:
                 currency_handler.delete_server_license_plan(test_id)
             assert exc_info.value.status_code == 404
-
-    def test_fetch_currencies_external_error(self, currency_handler):
-        mock_doc1 = MagicMock()
-        mock_doc1.payload.return_value = {"id": "1234", "name": "newname", "code": "EU"}
