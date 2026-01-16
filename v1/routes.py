@@ -30,7 +30,7 @@ router = APIRouter()
 @router.post(
     "/currency",
     tags=["Currency"],
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_409_CONFLICT,
     # response_model=CurrencyResponseSchema,
 )
 def create_currency(
