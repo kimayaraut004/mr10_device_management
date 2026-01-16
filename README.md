@@ -2,3 +2,4 @@
 final-test
 final-test
 pr-test
+# Test protection working
