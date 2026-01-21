@@ -37,14 +37,29 @@ jobs:
         pip install pytest pytest-cov
     
     # 5. Run YOUR unit tests
-    - name: Run unit tests
+    - name: Test Unit (no secrets needed)
       run: pytest tests/unit/ -v
     
     # 6. Run YOUR route tests
-    - name: Run route tests
+    - name: Test Integration (WITH SECRETS!)
+      env:  # ← INJECTS GitHub Secrets as ENV vars
+        DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+        DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        KAFKA_SASL_USERNAME: ${{ secrets.KAFKA_SASL_USERNAME }}
+        KAFKA_SASL_PASSWORD: ${{ secrets.KAFKA_SASL_PASSWORD }}
+        MY_IP: ${{ secrets.MY_IP }}
       run: pytest tests/integration/ -v
     
     # 7. Coverage report
-    - name: Coverage report
-      run: |
-        pytest --cov=core/ --cov-report=term-missing
+    - name: Coverage
+      run: pytest --cov=core/ --cov-report=term-missing
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy Production
+      run: echo "🚀 Deploying to production with secrets!"
